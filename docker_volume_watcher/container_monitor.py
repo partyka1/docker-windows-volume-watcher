@@ -46,6 +46,7 @@ class ContainerMonitor(object):
         self.client = docker.from_env()
         self.container_name_pattern = container_name_pattern
         self.host_dir_pattern = host_dir_pattern
+        self.ignore_file_pattern = '\.(idea|git)\/'
         self.notifiers = {}
 
     def __handle_event(self, event):

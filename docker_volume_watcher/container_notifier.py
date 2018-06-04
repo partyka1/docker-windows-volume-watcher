@@ -6,9 +6,11 @@ import logging
 from os.path import relpath
 import posixpath
 
+import re
 import docker
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
+
 
 class NonZeroExitError(RuntimeError):
     """
@@ -18,6 +20,7 @@ class NonZeroExitError(RuntimeError):
     def __init__(self, exit_code):
         super(NonZeroExitError, self).__init__()
         self.exit_code = exit_code
+
 
 class ContainerNotifier(object):
     """
@@ -43,6 +46,11 @@ class ContainerNotifier(object):
         event_handler.on_moved = handler
         event_handler.on_modified = handler
 
+        self.ignore_file_pattern = '(\.idea|\.git|\.node_modules|___jb_old___|___jb_tmp___)'
+        if self.ignore_file_pattern:
+            self.ignore_file_pattern_compiled = re.compile(self.ignore_file_pattern)
+        else:
+            self.ignore_file_pattern_compiled = None
         self.observer = Observer()
         self.observer.schedule(event_handler, host_dir, recursive=True)
         self.observer.start()
@@ -54,7 +62,13 @@ class ContainerNotifier(object):
         host_path = event.dest_path if hasattr(event, 'dest_path') else event.src_path
         relative_host_path = relpath(host_path, self.host_dir).replace('\\', '/')
         absolute_path = posixpath.join(self.container_dir, relative_host_path)
-        self.notify(absolute_path)
+
+        if self.ignore_file_pattern_compiled and not self.is_ignored(relative_host_path):
+            self.notify(absolute_path)
+
+    def is_ignored(self, path):
+        match = bool(re.search(self.ignore_file_pattern_compiled, path))
+        return match
 
     def notify(self, absolute_path):
         """

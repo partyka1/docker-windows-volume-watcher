@@ -26,7 +26,7 @@ def main():
                         action="store_true")
     args = parser.parse_args()
 
-    if args.verbose:
+    if 1 or args.verbose:
         logging.basicConfig(level=logging.INFO)
 
     monitor = ContainerMonitor(args.container_pattern, args.host_dir_pattern)
