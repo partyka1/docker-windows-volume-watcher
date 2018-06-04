@@ -40,7 +40,7 @@ class ContainerNotifier(object):
         self.host_dir = host_dir
         self.container_dir = container_dir
 
-        event_handler = PatternMatchingEventHandler(ignore_directories=False)
+        event_handler = PatternMatchingEventHandler(ignore_directories=True)
         handler = self.__change_handler
         event_handler.on_created = handler
         event_handler.on_moved = handler

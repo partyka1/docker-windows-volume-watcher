@@ -35,6 +35,7 @@ class ContainerMonitor(object):
     """
     Monitors container start/stop events and creates notifiers for mounts matching patterns.
     """
+
     def __init__(self, container_name_pattern, host_dir_pattern):
         """
         Initialize new instance of ContainerMonitor
@@ -46,7 +47,6 @@ class ContainerMonitor(object):
         self.client = docker.from_env()
         self.container_name_pattern = container_name_pattern
         self.host_dir_pattern = host_dir_pattern
-        self.ignore_file_pattern = '\.(idea|git)\/'
         self.notifiers = {}
 
     def __handle_event(self, event):
@@ -68,9 +68,10 @@ class ContainerMonitor(object):
         for container in self.client.containers.list():
             if fnmatch(container.name, self.container_name_pattern):
                 notifiers = self.watch_container(container.name)
-                logging.info(
-                    'Container %s has %i watched directories', container.name, len(notifiers))
-                notifiers_count += len(notifiers)
+                if notifiers:
+                    logging.info(
+                        'Container %s has %i watched directories', container.name, len(notifiers))
+                    notifiers_count += len(notifiers)
 
         if not notifiers_count:
             logging.warning(
@@ -89,6 +90,13 @@ class ContainerMonitor(object):
         """
 
         container = self.client.containers.get(container_name)
+
+        response = container.exec_run(" sh -c '[ -z \"$DISABLE_DOCKER_VOLUME_WATCHER\" ] || exit 1'",
+                                      privileged=True)
+        if response.exit_code != 0:
+            logging.info('Container %s blocked by environment variable', container.name)
+            return None
+
         mounts = container.attrs['Mounts']
         if container not in self.notifiers:
             self.notifiers[container_name] = []
