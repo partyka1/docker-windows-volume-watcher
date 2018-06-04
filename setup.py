@@ -3,11 +3,11 @@ from setuptools import setup, find_packages
 with open('README.rst') as file:
     long_description = file.read()
 
-setup(name='docker-windows-volume-watcher',
+setup(name='docker-inotify',
       version='2.0.0',
       packages=find_packages(),
       entry_points={
-          'console_scripts': ['docker-volume-watcher=docker_volume_watcher.cli:main'],
+          'console_scripts': ['docker-inotify=docker_volume_watcher.cli:main'],
           },
       description='A tool to notify Docker contianers about changes in mounts on Windows.',
       author='Maciej Partyka',

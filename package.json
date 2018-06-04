@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "build": "python setup.py bdist_wheel",
+    "install": "python setup.py install"
+  }
+}
