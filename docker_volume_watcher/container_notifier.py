@@ -8,6 +8,9 @@ import posixpath
 
 import re
 import docker
+
+from docker_volume_watcher.debounce import debounce
+from docker_volume_watcher.throttle import throttle
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 
@@ -46,7 +49,7 @@ class ContainerNotifier(object):
         event_handler.on_moved = handler
         event_handler.on_modified = handler
 
-        self.ignore_file_pattern = '(\.idea|\.git|\.node_modules|___jb_old___|___jb_tmp___)'
+        self.ignore_file_pattern = '(\.idea|\.git|node_modules|___jb_old___|___jb_tmp___)'
         if self.ignore_file_pattern:
             self.ignore_file_pattern_compiled = re.compile(self.ignore_file_pattern)
         else:
@@ -70,6 +73,8 @@ class ContainerNotifier(object):
         match = bool(re.search(self.ignore_file_pattern_compiled, path))
         return match
 
+    # @throttle(mindelta=1, groupByArgIndex=1)
+    @debounce(wait=1)
     def notify(self, absolute_path):
         """
         Notify container about change in file.
